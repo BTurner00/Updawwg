@@ -4,11 +4,22 @@
 *
 ********************************/
 
-module.exports = function(app){
+module.exports = function(app) {
 
-  app.controller('AddDogFormController', ['$scope','DawgInService',function($scope,DawgInService){
+  app.controller('AddDogFormController', ['$scope', 'DogService', function( $scope, DogService ){
+      $scope.dawgz = DogService.getDawgz();
+
+      // $scope.submitDog = function() {
+      //   let dogObj = {}
+      //
+      //
+      //   DogService.setDog(dogObj);
+      //   $scope.dawgz = DogService.getDawgz();
+      //
+      // };
 
   }])
+
 }
 
 },{}],2:[function(require,module,exports){
@@ -24,6 +35,7 @@ module.exports = function(app) {
         PawthenticationService.ClearCredentials();
 
         $scope.logIn = function() {
+            console.log($scope.username)
             PawthenticationService.LogIn($scope.username, $scope.password, function(response) {
                 if (response.success) {
                     PawthenticationService.SetCredentials($scope.username, $scope.password);
@@ -95,7 +107,7 @@ module.exports = function(app) {
   app.config(['$routeProvider', function ($routeProvider) {
     $routeProvider.when('/', {
       templateUrl: 'dogIn.html',
-      conroller: 'DawgInController'
+      controller: 'DawgInController'
     }).when('/feed', {
       templateUrl: 'feed.html',
       controller: 'FeedController'
@@ -120,10 +132,10 @@ module.exports = function(app) {
   require('./services/pawthentication-service')(app);
 
   // Controllers
+  require('./controllers/add-dog-form-controller')(app);
   require('./controllers/feed-controller')(app);
   require('./controllers/nav-controller')(app);
   require('./controllers/dawgIn-controller')(app);
-  require('./controllers/add-dog-form-controller');app;
 
   // Filters
 
@@ -137,7 +149,7 @@ module.exports = function(app) {
 
 module.exports = function(app) {
 
-  app.factory('DogService', function($http) {
+  app.factory('DogService', ['$http', function($http) {
 
       let dawgz = [];
 
@@ -165,50 +177,54 @@ module.exports = function(app) {
 
         },
 
-        setDog() {
-
+        setDog(data) {
+          $http({
+            url: '/dogs',
+            method: 'POST',
+            data: data,
+          })
 
         },
 
       } //********************************//
 
-  })//end DogService**********************//
+  }])//end DogService**********************//
 
 }
 
 },{}],7:[function(require,module,exports){
 'use strict'
 module.exports = function(app) {
-    app.factory('PawthenticationService', ['$http', '$rootScope', '$cookies', function($http, $rootScope,$cookies) {
+    app.factory('PawthenticationService', ['$http', '$rootScope', '$cookies', '$location', function($http, $rootScope, $cookies, $location) {
         let service = {};
         //Service functions*******************************
-        service.LogIn = function(username, password, callback) {
-            $http.post('', {
-                    username: username,
+        service.LogIn = function(name, password, callback) {
+            console.log(name,password);
+            $http.post('/users', {
+                    name: name,
                     password: password
                 })
                 .success(function(response) {
                     callback(response);
+                }).then(function() {
+                    $location.path('/about');
                 });
         }; //service.LogIn ends***********************
         service.SetCredentials = function(username, password) {
 
             $rootScope.globals = {
                 currentUser: {
-                    // this is what you had but it was throwing errors in my gulp.
-                    // this.username: username,
-                    // this.password: password
-                    username: username,
+                    name: name,
                     password: password
                 }
             };
-        $cookies.put('globals', $rootScope.globals)
+            $cookies.put('globals', $rootScope.globals)
         }; //service.SetCredentials ends******************
 
-        service.ClearCredentials = function () {
-          $rootScope.globals = {};
-          $cookies.remove('globals');
-      };
+        service.ClearCredentials = function() {
+            $rootScope.globals = {};
+            $cookies.remove('globals');
+        };
         return service;
     }]);
 }
