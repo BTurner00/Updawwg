@@ -75,8 +75,14 @@ public class UpdawwgRestController {
 
     // get/post routes for users
     @RequestMapping(path = "/users", method = RequestMethod.GET)
-    public Iterable<User> getUsers() {
-        return users.findAll();
+    public void getUsers(HttpSession session, HttpServletResponse response) throws Exception {
+        String username = (String) session.getAttribute("username");
+        if (username == null) {
+            response.sendRedirect("/#/");
+        } else {
+            response.sendRedirect("/#/feed");
+        }
+
     }
 
     // make login happen in here
